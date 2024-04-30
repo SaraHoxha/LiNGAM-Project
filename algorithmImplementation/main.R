@@ -1,10 +1,11 @@
+
 #IMPORT LIBRARIES AND FILES
 library("pcalg")
 library("here")
 source("algorithmImplementation/util.R")
 
 #LOAD DATASET & CONVERT TO MATRIX
-relative_path <- here("statsDf.csv")
+relative_path <- here("statsDfNormalizedWithLessColumns.csv")
 data <- read.csv(relative_path, header = TRUE)
 matrix_data <- as.matrix(data)
 
@@ -31,6 +32,7 @@ for (edge in edges) {
   cat("Edge from", edge$from, "to", edge$to, "with value:", edge$value, "\n")
 }
 
+cat (length(edges))
 
 #PLOT CAUSALITY GRAPH
 make_dot(res$Bpruned, colnames(data))
