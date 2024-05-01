@@ -2,8 +2,8 @@
 library(data.table)
 
 # Read the CSV file into a data frame
-data <- fread("statsDf.csv")
-
+data <- fread("geneNoStringCols.csv")
+print(data)
 # Select numeric columns to normalize
 numeric_cols <- sapply(data, is.numeric)
 
@@ -19,4 +19,4 @@ data[, (names(data)[numeric_cols]) := normalized_data]
 # Print the first few rows of the normalized dataset
 print(head(data))
 
-fwrite(data, "statsDfNormalized.csv")
+fwrite(data, "geneNoStringColsNormalized.csv")

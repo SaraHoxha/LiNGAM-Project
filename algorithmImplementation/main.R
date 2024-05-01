@@ -5,7 +5,7 @@ library("here")
 source("algorithmImplementation/util.R")
 
 #LOAD DATASET & CONVERT TO MATRIX
-relative_path <- here("statsDfNormalizedWithLessColumns.csv")
+relative_path <- here("geneNoStringColsNormalized.csv")
 data <- read.csv(relative_path, header = TRUE)
 matrix_data <- as.matrix(data)
 
@@ -35,7 +35,7 @@ for (edge in edges) {
 cat (length(edges))
 
 #PLOT CAUSALITY GRAPH
-#make_dot(res$Bpruned, colnames(data))
+make_dot(res$Bpruned, colnames(data))
 
 
 # Function to perform topological sorting
@@ -89,3 +89,5 @@ if (is.null(sorted_nodes)) {
 } else {
   cat("The graph is a Directed Acyclic Graph (DAG).\n")
 }
+
+
