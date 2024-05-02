@@ -1,0 +1,1 @@
+install.packages(c("mvnormtest", "poweRlaw", "ks", "fitdistrplus", "SemiPar", "ISwR", "VGAM", "stats4", "ROCR", "scmamp", "plot3D", "GoFKernel", "boot", "ISLR", "caret", "multcomp", "brunnermunzel", "qvalue", "devtools", "mnist", "DataExplorer", "actuar", "MKinfer", "BSDA", "pROC", "RVAideMemoire", "DescTools", "plugdensity", "mvtnorm", "MASS", "ciTools", "stats"))
