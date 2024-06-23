@@ -1,12 +1,76 @@
-
 #IMPORT LIBRARIES AND FILES
 library("pcalg")
 library("here")
-source("algorithmImplementation/util.R")
+library("igraph")
+
+#FUNCTION TO PLOT THE ADJACENCY MATRIX
+make_dot <- function(adjacency_matrix, node_names = NULL) {
+  graph <- graph_from_adjacency_matrix(adjacency_matrix, mode = "directed", weighted = TRUE)
+  
+  if (!is.null(node_names)) {
+    V(graph)$name <- node_names
+  }
+  
+  E(graph)$color <- ifelse(E(graph)$weight < 0, "red", "black")
+  
+  plot(graph,
+       layout = layout_nicely,
+       vertex.label.color = "black",
+       vertex.size = 30,
+       edge.arrow.size = 0.5,
+       edge.curved = 0.2,
+       main = "Causal Graph")
+}
+
+getAndPrintEdges <- function (res, data){
+  # LIST EDGES
+  edges <- list()
+  for (i in 1:nrow(res$Bpruned)) {
+    for (j in 1:ncol(res$Bpruned)) {
+      if (res$Bpruned[i, j] != 0) {  # If the coefficient is non-zero, it indicates an edge
+        edges[[length(edges) + 1]] <- list(from = colnames(data)[j], to = colnames(data)[i], value = res$Bpruned[i, j])
+      }
+    }
+  }
+
+  for (edge in edges) {
+    cat("Edge from", edge$from, "to", edge$to, "with value:", edge$value, "\n")
+  }
+
+  cat ("number of edges", length(edges), "\n")
+
+  return (edges)
+}
+
+# Function to perform topological sorting
+topological_sort <- function(graph) {
+  indegree <- colSums(graph)
+  queue <- which(indegree == 0)
+  sorted <- character()
+  
+  while (length(queue) > 0) {
+    node <- queue[1]
+    queue <- queue[-1]
+    sorted <- c(sorted, node)
+    
+    neighbors <- which(graph[node, ] == 1)
+    for (neighbor in neighbors) {
+      indegree[neighbor] <- indegree[neighbor] - 1
+      if (indegree[neighbor] == 0) {
+        queue <- c(queue, neighbor)
+      }
+    }
+  }
+  
+  if (length(sorted) == ncol(graph)) {
+    return(sorted)
+  } else {
+    return(NULL) # Not a DAG
+  }
+}
 
 #LOAD DATASET & CONVERT TO MATRIX
-relative_path <- here("geneNoStringColsNormalized.csv")
-data <- read.csv(relative_path, header = TRUE)
+data <- read.csv("algorithmImplementation/seattle-weather-Normalized.csv", header = TRUE)
 matrix_data <- as.matrix(data)
 
 # RUN LINGAM ALGORITHM
@@ -17,68 +81,10 @@ matrix_data <- as.matrix(data)
 # -ci a vector of length p with the intercepts of each equation
 res <- lingam(matrix_data, verbose = FALSE)
 
-
-# LIST EDGES
-edges <- list()
-for (i in 1:nrow(res$Bpruned)) {
-  for (j in 1:ncol(res$Bpruned)) {
-    if (res$Bpruned[i, j] != 0) {  # If the coefficient is non-zero, it indicates an edge
-      edges[[length(edges) + 1]] <- list(from = colnames(data)[j], to = colnames(data)[i], value = res$Bpruned[i, j])
-    }
-  }
-}
-
-for (edge in edges) {
-  cat("Edge from", edge$from, "to", edge$to, "with value:", edge$value, "\n")
-}
-
-cat (length(edges))
+edges <- getAndPrintEdges(res, data)
 
 #PLOT CAUSALITY GRAPH
 make_dot(res$Bpruned, colnames(data))
-
-
-# Function to perform topological sorting
-topological_sort <- function(graph) {
-  indegree <- numeric(length = length(graph))
-  for (i in seq_along(graph)) {
-    indegree[i] <- sum(graph[[i]] == TRUE)
-  }
-  
-  queue <- which(indegree == 0)
-  sorted <- vector("character", length = length(graph))
-  index <- 1
-  
-  while (length(queue) > 0) {
-    node <- queue[1]
-    queue <- queue[-1]
-    sorted[index] <- node
-    index <- index + 1
-    
-    neighbors <- which(graph[[node]] == TRUE)
-    for (neighbor in neighbors) {
-      indegree[neighbor] <- indegree[neighbor] - 1
-      if (indegree[neighbor] == 0) {
-        queue <- c(queue, neighbor)
-      }
-    }
-  }
-  
-  if (sum(indegree > 0) > 0) {
-    return(NULL) # Not a DAG
-  } else {
-    return(sorted)
-  }
-}
-
-# Construct adjacency matrix
-num_nodes <- ncol(matrix_data)
-adj_matrix <- matrix(0, nrow = num_nodes, ncol = num_nodes)
-for (edge in edges) {
-  from_index <- which(colnames(data) == edge$from)
-  to_index <- which(colnames(data) == edge$to)
-  adj_matrix[to_index, from_index] <- 1
-}
 
 # Perform topological sorting
 sorted_nodes <- topological_sort(graph = adj_matrix)
@@ -89,5 +95,3 @@ if (is.null(sorted_nodes)) {
 } else {
   cat("The graph is a Directed Acyclic Graph (DAG).\n")
 }
-
-
