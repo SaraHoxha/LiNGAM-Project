@@ -70,7 +70,7 @@ topological_sort <- function(graph) {
 }
 
 #LOAD DATASET & CONVERT TO MATRIX
-data <- read.csv("algorithmImplementation/seattle-weather-Normalized.csv", header = TRUE)
+data <- read.csv("algorithmImplementation/seattle-weather-Normalized No weather column.csv", header = TRUE)
 matrix_data <- as.matrix(data)
 
 # RUN LINGAM ALGORITHM
