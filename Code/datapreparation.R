@@ -11,7 +11,7 @@ missing_values <- colSums(is.na(df))
 print(missing_values[missing_values > 0])
 
 # Drop unnecessary columns
-df <- df[, !names(df) %in% c('Country', 'Year', 'Happiness.rank', 'Corruption', 'Generosity')]
+df <- df[, !names(df) %in% c('Country', 'Year', 'Happiness.rank', 'Corruption')] #'Corruption', 'Generosity') add
 
 # Drop rows with missing values
 df_cleaned <- na.omit(df)
@@ -24,14 +24,14 @@ print("After normalization:")
 print(df_normalized)
 
 # Save the normalized dataset to a CSV file
-write.csv(df_normalized, "~/Desktop/Master/UniPi/SFDS/Statistics/Dataset/TEH_World_Happiness_2019_Imputed_Normalized.csv", row.names = FALSE)
+write.csv(df_normalized, "~/Desktop/Master/UniPi/SFDS/Statistics/Dataset/TEH_World_Happiness_2019_Imputed_Normalized_Milica_v2.csv", row.names = FALSE)
 
 # Compute the correlation matrix
 correlation_matrix <- cor(df_normalized, method = "pearson")
 
 
 # Define the path to save the heatmap
-output_path <- "~/Desktop/Master/UniPi/SFDS/Statistics/Figures/correlation_heatmap.png"
+output_path <- "~/Desktop/Master/UniPi/SFDS/Statistics/Figures/correlation_heatmap_Milica.png"
 
 # Open a PNG device to save the heatmap
 png(output_path, width = 800, height = 800)
