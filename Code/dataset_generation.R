@@ -1,10 +1,9 @@
 # Load required libraries
-library(MASS)     # for generating multivariate normal-distributed data
+library(MASS)
 
-# Set seed for reproducibility
 set.seed(123)
 
-# Number of observations
+# Set number of observations
 n <- 1000
 
 # Mean vector for the variables
@@ -23,7 +22,7 @@ L <- matrix(c(
 cov_mat <- L %*% t(L)
 
 # Check if covariance matrix is positive definite
-eigen(cov_mat)$values  # All values should be positive
+eigen(cov_mat)$values
 
 # Generate multivariate normal-distributed data
 data_norm <- mvrnorm(n, mu = mean_vec, Sigma = cov_mat)
@@ -39,5 +38,5 @@ dataframe <- data.frame(A = data_t[,1],  # Variable A from t-distribution
                         D = data_t[,4],  # Variable D from t-distribution
                         E = data_t[,5])  # Variable E from t-distribution
 
-# Print the first few rows of the dataset
+# Save dataset to file
 write.csv(dataframe, "../Dataset/generated_data.csv", row.names = FALSE)
