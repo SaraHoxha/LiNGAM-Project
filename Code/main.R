@@ -2,37 +2,39 @@
 library(igraph)
 source("utils.R")
 
+set.seed(123)
+
 # Load the dataset
-data <- read_dataframe("../Dataset/seattle-weather-Normalized.csv")
+happiness_data <- read_dataframe("../Dataset/TEH_World_Happiness_2019_Imputed_Normalized.csv")
 
-result <- lingam_algorithm(data)
+happiness_result <- lingam_algorithm(happiness_data)
 
-
-print("B matrix:")
-print(result$B)
+#BEFORE PRUNING
+print("B matrix BEFORE:")
+print(happiness_result$B)
 print("Causal Order")
-print(result$causal_order)
-print("Adjacency matrix:")
-adjacency_matrix <- result$adjacency_matrix
-print(result$adjacency_matrix)
-
-colnames(adjacency_matrix) <- colnames(data)
-rownames(adjacency_matrix) <- colnames(data)
-graph <- graph.adjacency(adjacency_matrix, mode = "directed")
-plot(graph, 
-     vertex.label = colnames(data),  # Use column names as vertex labels
-     main = "DAG from LiNGAM",
-     vertex.size = 30,               # Set the size of vertices (nodes)
-     vertex.color = "lightblue",     # Set the color of vertices (nodes)
-     vertex.frame.color = "black",   # Set the color of the border around vertices
-     vertex.label.color = "black",   # Set the color of vertex labels
-     vertex.label.cex = 0.8          # Set the size of vertex labels
-)
+print(happiness_result$causal_order)
+print("Adjacency matrix BEFORE:")
+adjacency_matrix <- happiness_result$adjacency_matrix
+print(happiness_result$adjacency_matrix)
+#plot_causality_graph(happiness_result$adjacency_matrix,colnames(happiness_data), "Happiness BEFORE PRUNING")
+#print(is_dag(adjacency_matrix))
 
 is_dag <- function(adjacency_matrix) {
   graph <- graph.adjacency(adjacency_matrix, mode = "directed")
   return(is.dag(graph))
 }
 
-print(is_dag(adjacency_matrix))
+#AFTER PRUNING
+pruning_result = wald_test(as.matrix(happiness_data),happiness_result$W_prime)
+
+print("B matrix AFTER:")
+print(happiness_result$B_pruned)
+
+print("Adjacency matrix AFTER:")
+pruning_result$adjacency_matrix_pruned
+
+plot_causality_graph(pruning_result$adjacency_matrix_pruned,colnames(happiness_data), "Happiness AFTER PRUNING")
+print(is_dag(pruning_result$adjacency_matrix_pruned))
+
 

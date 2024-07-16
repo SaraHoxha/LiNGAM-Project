@@ -12,7 +12,7 @@ read_dataframe <- function(file_path) {
 }
 
 # Function to calculate Adjacency Matrix from matrix B
-calculate_adjacency_matrix(B) {
+calculate_adjacency_matrix <- function(B) {
   adjacency_matrix <- ifelse(B != 0, 1, 0)
   return(adjacency_matrix)
 }
@@ -93,42 +93,58 @@ lingam_algorithm <- function(data) {
   # Step 6: Generate the Adjacency Matrix
   adjacency_matrix <- calculate_adjacency_matrix(B_permuted)
   
-  return(list(B=B_permuted, adjacency_matrix =adjacency_matrix))
+  return(list(W_prime=W_prime,B=B_permuted, adjacency_matrix =adjacency_matrix))
 }
 
 # Wald Test Function for Pruning Edges
-  wald_test <- function(B, significance_level = 0.05) {
+  wald_test <- function(X,B, significance_level = 0.05) {
     n <- nrow(B)
+    p <- ncol(B)
+    avar <- matrix(0, n, p)
     
-    # Calculate the asymptotic variances of the elements of B
-    avar <- matrix(0, n, n)
     for (i in 1:n) {
-      for (j in 1:n) {
-        if (i != j) {
-          avar[i, j] <- B[i, j]^2  # Assuming B[i, j] is Bij
+      for (j in 1:p) {
+        if (i != j && B[i, j] != 0) {
+          # Fit linear model for X[i] ~ X[-i] using B[i, j] as coefficients
+          # Get the residuals and calculate variance
+          X_j <- X[, -i]
+          lm_fit <- lm(X[, i] ~ X_j)
+          residuals <- lm_fit$residuals
+          sigma2 <- var(residuals)
+          
+          # Calculate variance of coefficient B[i, j]
+          avar[i, j] <- sigma2 * solve(t(X_j) %*% X_j)[j, j]
         }
       }
     }
     
+    
+    print("avar")
+    print(avar)
     # Calculate the Wald statistics
     wald_stat <- B^2 / avar
+    print("wald_stat")
+    print(wald_stat)
     
     # Calculate the critical value for the chi-square distribution with 1 degree of freedom
     critical_value <- qchisq(1 - significance_level, df = 1)
+    print("critical_value")
+    print(critical_value)
     
     # Prune the B matrix based on the Wald test
-    B_pruned <- ifelse(wald_stat >= critical_value, B, 0)
+    B_pruned <- ifelse(!is.nan(wald_stat) & wald_stat >= critical_value, B, 0)
+    print("B_pruned")
+    print(B_pruned)
     
     # Generate the Adjacency Matrix
     adjacency_matrix_pruned <- calculate_adjacency_matrix(B_pruned)
     
-    return(list(B_pruned, adja))
+    return(list(B_pruned = B_pruned,adjacency_matrix_pruned= adjacency_matrix_pruned))
   }
   
- plot_causality_graph(adjacency_matrix, colnames, rownames, datasetName) {
+ plot_causality_graph <- function(adjacency_matrix, colnames, datasetName) {
    colnames(adjacency_matrix) <- colnames
-   rownames(adjacency_matrix) <- rownames
-   title = datasetName + " DAG"
+   title <- paste(datasetName, "DAG", sep = " ")
    graph <- graph.adjacency(adjacency_matrix, mode = "directed")
    plot(graph, 
         vertex.label = colnames(adjacency_matrix),  # Use column names as vertex labels
@@ -140,4 +156,10 @@ lingam_algorithm <- function(data) {
         vertex.label.cex = 0.8          # Set the size of vertex labels
    )
  }
+ 
+ is_dag <- function(adjacency_matrix) {
+   graph <- graph.adjacency(adjacency_matrix, mode = "directed")
+   return(is.dag(graph))
+ }
+ 
 
