@@ -1,49 +1,38 @@
-# Combine into a data frame
-library("pcalg")
-library("igraph")
-library("here")
+# Install and load necessary packages
+library(igraph)
+source("utils.R")
 
-source("~/Desktop/Master/UniPi/SFDS/Statistics/Code/utils.R")
+# Load the dataset
+data <- read_dataframe("../Dataset/seattle-weather-Normalized.csv")
 
-data <- read.csv("~/Desktop/Master/UniPi/SFDS/Statistics/Dataset/TEH_World_Happiness_2019_Imputed_Normalized.csv", header = TRUE)
-data <- as.matrix(data)
-
-# Apply LINGAM
-lingam_result <- lingam(data)
-print(str(lingam_result))
-
-# Extract Bpruned matrix
-Bpruned <- lingam_result$Bpruned
-
-# Determine the causal ordering from Bpruned
-causal_order <- order(rowSums(Bpruned != 0))
-print("Causal Ordering:")
-print(causal_order)
-
-# Construct the adjacency matrix
-adj_matrix <- Bpruned != 0
-print("Adjacency Matrix:")
-print(adj_matrix)
-
-# Print the Estimated B Matrix
-print("Estimated B Matrix:")
-print(Bpruned)
-
-# Save the results to files
-write.csv(causal_order, "~/Desktop/Master/UniPi/SFDS/Statistics/Results/World_Happiness_Causal_Order_Milica.csv", row.names = FALSE)
-write.csv(adj_matrix, "~/Desktop/Master/UniPi/SFDS/Statistics/Results/World_Happiness_Adj_Matrix_Milica.csv", row.names = FALSE)
-write.csv(Bpruned, "~/Desktop/Master/UniPi/SFDS/Statistics/Results/World_Happiness_Estimated_B_matrix_Milica.csv", row.names = FALSE)
+result <- lingam_algorithm(data)
 
 
-# Use make_dot function to plot the graph
-plot_causality_graph(adj_matrix, node_names = colnames(data))
+print("B matrix:")
+print(result$B)
+print("Causal Order")
+print(result$causal_order)
+print("Adjacency matrix:")
+adjacency_matrix <- result$adjacency_matrix
+print(result$adjacency_matrix)
 
-# Use getAndPrintEdges function to list and print edges
-edges <- print_edges(lingam_result, data)
+colnames(adjacency_matrix) <- colnames(data)
+rownames(adjacency_matrix) <- colnames(data)
+graph <- graph.adjacency(adjacency_matrix, mode = "directed")
+plot(graph, 
+     vertex.label = colnames(data),  # Use column names as vertex labels
+     main = "DAG from LiNGAM",
+     vertex.size = 30,               # Set the size of vertices (nodes)
+     vertex.color = "lightblue",     # Set the color of vertices (nodes)
+     vertex.frame.color = "black",   # Set the color of the border around vertices
+     vertex.label.color = "black",   # Set the color of vertex labels
+     vertex.label.cex = 0.8          # Set the size of vertex labels
+)
 
 is_dag <- function(adjacency_matrix) {
   graph <- graph.adjacency(adjacency_matrix, mode = "directed")
   return(is.dag(graph))
 }
 
-print(is_dag(adj_matrix))
+print(is_dag(adjacency_matrix))
+
