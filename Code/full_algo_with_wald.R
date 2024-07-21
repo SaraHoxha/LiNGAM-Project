@@ -9,6 +9,8 @@ library(igraph)
 library(gtools)
 library(lmtest)
 
+set.seed(123)
+
 # Load the dataset
 data <- read.csv("C:/Users/milit/OneDrive/Desktop/stats_project/Statistics-for-data-science/Dataset/TEH_World_Happiness_2019_Imputed_Normalized.csv")
 
@@ -64,7 +66,6 @@ B_permuted[upper.tri(B_permuted)] <- 0
 # Step 6: Prune B to obtain B_pruned
 threshold <- 0.1 # Set a threshold value for pruning
 B_pruned <- B_permuted
-B_pruned[abs(B_pruned) < threshold] <- 0
 
 # Step 7: Generate the Adjacency Matrix
 adjacency_matrix <- ifelse(B_pruned != 0, 1, 0)
