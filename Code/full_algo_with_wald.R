@@ -134,9 +134,3 @@ is_dag <- function(adjacency_matrix) {
 }
 
 cat("Is the graph a DAG? ", is_dag(adjacency_matrix), "\n")
-
-# Save the matrices to CSV files
-write.csv(B, "estimated_B_matrix.csv", row.names = FALSE)
-write.csv(B_pruned, "B_pruned_matrix.csv", row.names = FALSE)
-write.csv(adjacency_matrix, "adjacency_matrix.csv", row.names = FALSE)
-write.csv(wald_test_results, "wald_test_results.csv", row.names = TRUE)
