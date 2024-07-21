@@ -40,29 +40,3 @@ This file executes the main analysis for discovering causal structures in the Wo
 - Plots the directed acyclic graph (DAG) before and after pruning.
 
 
-## Generated dataset
-
-### dataset_generation.r
-
-This file generates a synthetic dataset with non-Gaussian linear data for testing and analysis purposes. The script performs the following tasks:
-
-- Sets a seed for reproducibility.
-- Defines the number of samples (`n`) and variables (`p`).
-- Creates a random linear model with non-Gaussian noise.
-- Generates non-Gaussian noise using a uniform distribution.
-- Initializes a data matrix and populates it according to the linear model.
-- Converts the data matrix to a data frame and assigns column names.
-- Saves the generated dataset to a CSV file.
-
-### generated_dataset_main.r
-
-This file executes the main analysis for discovering causal structures in the generated synthetic dataset using the LINGAM algorithm. It performs the following tasks:
-
-- Installs and loads necessary packages (`igraph`).
-- Sources utility functions from `utils.R`.
-- Sets a random seed for reproducibility.
-- Loads and preprocesses the generated dataset.
-- Runs the LINGAM algorithm to determine causal structures.
-- Prints and analyzes results before pruning.
-- Plots the directed acyclic graph (DAG) before pruning.
-- Contains commented-out code for pruning using the Wald test and analyzing results after pruning.
