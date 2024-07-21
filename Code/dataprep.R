@@ -55,7 +55,7 @@ write.csv(df_normalized, "../Dataset/TEH_World_Happiness_2019_Imputed_Normalized
 # Compute the correlation matrix
 correlation_matrix <- cor(df_normalized, method = "pearson")
 
-# Define the path to save the heatmap
+# Plot and save the heatmap
 output_path <- "../Figures/Happiness_Correlation_Heatmap.png"
 png(output_path, width = 800, height = 800)
 
