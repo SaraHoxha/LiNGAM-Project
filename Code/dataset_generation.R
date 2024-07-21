@@ -1,42 +1,37 @@
-# Load required libraries
-library(MASS)
-
+# Set seed for reproducibility
 set.seed(123)
 
-# Set number of observations
-n <- 1000
+# Generate non-Gaussian linear data
+n <- 1000  # number of samples
+p <- 5     # number of variables
 
-# Mean vector for the variables
-mean_vec <- c(0, 0, 0, 0, 0)
+# Create a random linear model with non-Gaussian noise
+B <- matrix(c(
+  0, 0, 0, 0, 0,
+  0.5, 0, 0, 0, 0,
+  0.5, 0, 0, 0, 0,
+  0, 0.5, 0, 0, 0,
+  0, 0, 0.5, 0.5, 0
+), byrow = TRUE, ncol = p)
 
-# Define a lower triangular matrix L
-L <- matrix(c(
-  1.0, 0.0, 0.0, 0.0, 0.0,
-  0.6, 0.8, 0.0, 0.0, 0.0,
-  0.7, 0.3, 0.7, 0.0, 0.0,
-  0.0, 0.5, 0.4, 0.6, 0.0,
-  0.0, 0.0, 0.0, 0.3, 0.7
-), nrow = 5, byrow = TRUE)
+# Generate non-Gaussian noise (e.g., uniform distribution)
+noise <- matrix(runif(n * p, min = -1, max = 1), nrow = n, ncol = p)
 
-# Covariance matrix derived from L
-cov_mat <- L %*% t(L)
+# Initialize data matrix
+X <- matrix(0, nrow = n, ncol = p)
 
-# Check if covariance matrix is positive definite
-eigen(cov_mat)$values
+# Generate data according to the linear model with non-Gaussian noise
+for (i in 1:p) {
+  X[, i] <- noise[, i]
+  if (i > 1) {
+    for (j in 1:(i-1)) {
+      X[, i] <- X[, i] + B[i, j] * X[, j]
+    }
+  }
+}
 
-# Generate multivariate normal-distributed data
-data_norm <- mvrnorm(n, mu = mean_vec, Sigma = cov_mat)
 
-# Convert to multivariate t-distribution
-df <- 3  # Degrees of freedom for t-distribution
-data_t <- data_norm / sqrt(rchisq(n, df) / df)
-
-# Combine the datasets into a dataframe
-dataframe <- data.frame(A = data_t[,1],  # Variable A from t-distribution
-                        B = data_t[,2],  # Variable B from t-distribution
-                        C = data_t[,3],  # Variable C from t-distribution
-                        D = data_t[,4],  # Variable D from t-distribution
-                        E = data_t[,5])  # Variable E from t-distribution
-
+df <- as.data.frame(X)
+colnames(df) <- paste0("V", 1:p)
 # Save dataset to file
-write.csv(dataframe, "../Dataset/generated_data.csv", row.names = FALSE)
+write.csv(df, "../Dataset/generated_data.csv", row.names = FALSE)
