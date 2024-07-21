@@ -1,42 +1,31 @@
-## Hapiness dataset:
+# S4DS - LINGAM Project README
 
-### utils.r
+## Authors
+- Sara Hoxha
+- Milica Radojicic
 
-This file contains utility functions for implementing the LINGAM (Linear, Non-Gaussian, Acyclic Model) algorithm, which is used for discovering causal structures in multivariate data.
+In this project, we have implemented in R the LiNGAM algorithm to analyze and determine causal order on the "TEH_World_Happiness_2019_Imputed" dataset.
 
-It includes the following to:
-- read data from a CSV file
-- calculate adjacency matrices
-- implement the LINGAM algorithm
-- perform Wald tests for pruning edges
-- plot the resulting directed acyclic graphs (DAGs)
-- verify if a given adjacency matrix represents a DAG.
+## Project Structure
 
+The project is organized into the following directories:
 
-### happiness_dataprep.r
+### 1. **Code**
+   - **Purpose**: This folder contains all the R code used in the project.
+   - **Files**:
+     - `main.R`: The main script that calls the LINGAM algorithm and prints the primary results, as well as the causal graph.
+     - `utils.R`: Utility functions and helper code used throughout the project. It includes the LINGAM algorithm, Wald Test, and plot graphing.
+     - `dataprep.R`: Code for preprocessing the dataset, including normalization, removal of redudant features, and testing LiNGAM assumptions.
 
-This file preprocesses the World Happiness dataset, performing the following tasks:
+### 2. **Figures**
+   - **Purpose**: This folder includes all the plots and figures generated from the project’s code.
+   - **Files**:
+     - `CausalGraph.png`: Visualization of the causal graph derived from applying LiNGAM.
+     - `Happiness_Correlation_Heatmap.png`: Heatmap representing the Pearson correlation between features.
+     - `Happiness_Scatter_Plot.png`: Scatter plots illustrating the relationships between different features.
 
-- Loads necessary libraries (`ggplot2`, `reshape2`, `gplots`, `GGally`, `dplyr`).
-- Reads the dataset from a CSV file.
-- Checks for and reports missing values.
-- Removes unnecessary columns and rows with missing data.
-- Plots histograms to visualize variable distributions.
-- Conducts Shapiro-Wilk tests for normality.
-- Generates scatter plots for variable pairs.
-- Normalizes the data and saves it to a CSV file.
-- Computes and plots a Pearson correlation heatmap.
-
-### happiness_dataset_main.r
-
-This file executes the main analysis for discovering causal structures in the World Happiness dataset using the LINGAM algorithm. It performs the following tasks:
-
-- Installs and loads necessary packages (`igraph`).
-- Sources utility functions from `utils.R`.
-- Sets a random seed for reproducibility.
-- Loads and preprocesses the dataset.
-- Runs the LINGAM algorithm to determine causal structures.
-- Prints and analyzes results before and after pruning.
-- Plots the directed acyclic graph (DAG) before and after pruning.
-
-
+### 3. **Dataset**
+   - **Purpose**: This folder contains the data files used in the project.
+   - **Files**:
+     - `TEH_World_Happiness_2019_Imputed.csv`: The original dataset.
+     - `TEH_World_Happiness_2019_Imputed_Normalized.csv`: The dataset after preprocessing which is used for the LiNGAM algorithm.
