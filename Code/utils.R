@@ -92,70 +92,93 @@ lingam_algorithm <- function(data) {
   
   # Step 6: Generate the Adjacency Matrix
   adjacency_matrix <- calculate_adjacency_matrix(B_permuted)
+  causal_order <- colnames(data)[best_perm]
   
-  return(list(W_prime=W_prime,B=B_permuted, adjacency_matrix =adjacency_matrix))
+  wald_test_results <- perform_wald_test(data_centered, B_permuted)$significant
+  return(list(causal_order=causal_order,B=B_permuted, adjacency_matrix =adjacency_matrix, wald_test_results= wald_test_results))
 }
 
-# Wald Test Function for Pruning Edges
-  wald_test <- function(X,B, significance_level = 0.05) {
-    n <- nrow(B)
-    p <- ncol(B)
-    avar <- matrix(0, n, p)
-    
-    for (i in 1:n) {
-      for (j in 1:p) {
-        if (i != j && B[i, j] != 0) {
-          # Fit linear model for X[i] ~ X[-i] using B[i, j] as coefficients
-          # Get the residuals and calculate variance
-          X_j <- X[, -i]
-          lm_fit <- lm(X[, i] ~ X_j)
-          residuals <- lm_fit$residuals
-          sigma2 <- var(residuals)
-          
-          # Calculate variance of coefficient B[i, j]
-          avar[i, j] <- sigma2 * solve(t(X_j) %*% X_j)[j, j]
-        }
+perform_wald_test <- function(data_centered, B) {
+  # Initialize matrix to store p-values
+  wald_test_results <- matrix(NA, nrow = nrow(B), ncol = ncol(B))
+  rownames(wald_test_results) <- colnames(data_centered)
+  colnames(wald_test_results) <- colnames(data_centered)
+  
+  # Define the significance level and critical value for chi-squared test
+  alpha <- 0.05
+  critical_value <- qchisq(1 - alpha, df = 1)
+  
+  # Loop over each coefficient
+  for (i in 1:nrow(B)) {
+    for (j in 1:ncol(B)) {
+      if (B[i, j] != 0) {
+        # Fit linear model for each coefficient
+        model <- lm(data_centered[, i] ~ data_centered[, j])
+        
+        # Extract coefficient and standard error
+        coef_estimate <- coef(model)[2]  # coefficient for data_centered[, j]
+        std_error <- summary(model)$coefficients[2, 2]  # standard error of the coefficient
+        
+        # Compute Wald statistic
+        wald_statistic <- (coef_estimate^2) / (std_error^2)
+        
+        # Calculate p-value from chi-squared distribution
+        p_value <- 1 - pchisq(wald_statistic, df = 1)
+        
+        # Store p-value in results matrix
+        wald_test_results[i, j] <- p_value
       }
     }
-    
-    
-    print("avar")
-    print(avar)
-    # Calculate the Wald statistics
-    wald_stat <- B^2 / avar
-    print("wald_stat")
-    print(wald_stat)
-    
-    # Calculate the critical value for the chi-square distribution with 1 degree of freedom
-    critical_value <- qchisq(1 - significance_level, df = 1)
-    print("critical_value")
-    print(critical_value)
-    
-    # Prune the B matrix based on the Wald test
-    B_pruned <- ifelse(!is.nan(wald_stat) & wald_stat >= critical_value, B, 0)
-    print("B_pruned")
-    print(B_pruned)
-    
-    # Generate the Adjacency Matrix
-    adjacency_matrix_pruned <- calculate_adjacency_matrix(B_pruned)
-    
-    return(list(B_pruned = B_pruned,adjacency_matrix_pruned= adjacency_matrix_pruned))
   }
   
- plot_causality_graph <- function(adjacency_matrix, colnames, datasetName) {
-   colnames(adjacency_matrix) <- colnames
-   title <- paste(datasetName, "DAG", sep = " ")
-   graph <- graph.adjacency(adjacency_matrix, mode = "directed")
-   plot(graph, 
-        vertex.label = colnames(adjacency_matrix),  # Use column names as vertex labels
-        main = title,
-        vertex.size = 30,               # Set the size of vertices (nodes)
-        vertex.color = "lightblue",     # Set the color of vertices (nodes)
-        vertex.frame.color = "black",   # Set the color of the border around vertices
-        vertex.label.color = "black",   # Set the color of vertex labels
-        vertex.label.cex = 0.8          # Set the size of vertex labels
-   )
- }
+  # Return results matrix and indicate which coefficients are significant
+  list(
+    p_values = wald_test_results,
+    significant = wald_test_results < alpha
+  )
+}
+  
+plot_causality_graph <- function(adjacency_matrix, colnames, causal_order, datasetName) {
+  # Set up the graph
+  graph <- graph.adjacency(adjacency_matrix, mode = "directed")
+  
+  # Set vertex names
+  V(graph)$name <- colnames
+  
+  # Define colors
+  default_edge_color <- "gray"   # Color for non-causal order edges
+  causal_edge_color <- "green"     # Color for causal order edges
+  
+  # Define causal edges
+  causal_edges <- lapply(seq_along(causal_order[-length(causal_order)]), function(i) {
+    c(causal_order[i], causal_order[i + 1])
+  })
+  
+  # Get edges of the graph
+  edge_list <- as_edgelist(graph, names = TRUE)
+  
+  # Define edge colors
+  edge_colors <- sapply(E(graph), function(edge) {
+    edge_vertices <- names(V(graph)[ends(graph, edge)])
+    if (any(sapply(causal_edges, function(causal_edge) all(causal_edge %in% edge_vertices)))) {
+      return(causal_edge_color)
+    } else {
+      return(default_edge_color)
+    }
+  })
+  
+  # Plot the graph
+  plot(graph, 
+       vertex.label = V(graph)$name,  # Use vertex names as labels
+       main = paste(datasetName, "DAG", sep = " "),
+       vertex.size = 30,              # Set the size of vertices (nodes)
+       vertex.color = "lightblue",    # Set the color of vertices (nodes)
+       vertex.frame.color = "black",  # Set the color of the border around vertices
+       vertex.label.color = "black",  # Set the color of vertex labels
+       vertex.label.cex = 0.8,        # Set the size of vertex labels
+       edge.color = edge_colors       # Set edge colors
+  )
+}
  
  is_dag <- function(adjacency_matrix) {
    graph <- graph.adjacency(adjacency_matrix, mode = "directed")

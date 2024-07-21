@@ -2,10 +2,12 @@
 if (!require(fastICA)) install.packages("fastICA")
 if (!require(igraph)) install.packages("igraph")
 if (!require(gtools)) install.packages("gtools")
+if (!require(lmtest)) install.packages("lmtest")
 
 library(fastICA)
 library(igraph)
 library(gtools)
+library(lmtest)
 
 # Load the dataset
 data <- read.csv("C:/Users/milit/OneDrive/Desktop/stats_project/Statistics-for-data-science/Dataset/TEH_World_Happiness_2019_Imputed_Normalized.csv")
@@ -36,16 +38,13 @@ cat("Normalized Unmixing Matrix (W):\n")
 print(W_normalized)
 
 # Step 4: Compute B as I - W_normalized
-#this matrix represents the estimated direct influences between variables.
 B <- diag(nrow(W_normalized)) - W_normalized
 
 # Step 5: Find the permutation matrix P that makes B as close as possible to strictly lower triangular
-# Define a cost function for measuring how close B is to lower triangular
 lower_tri_cost <- function(B) {
   sum(B[upper.tri(B)]^2)
 }
 
-# Find the best permutation
 perms <- permutations(nrow(B), nrow(B))
 min_cost <- Inf
 best_perm <- NULL
@@ -60,9 +59,6 @@ for (perm in seq_len(nrow(perms))) {
 
 P <- diag(nrow(B))[best_perm, ]
 B_permuted <- P %*% B %*% t(P)
-
-# It appears that ensuring 
-#B is strictly lower triangular after permutation is necessary to maintain the DAG structure. 
 B_permuted[upper.tri(B_permuted)] <- 0
 
 # Step 6: Prune B to obtain B_pruned
@@ -83,16 +79,55 @@ print(B_pruned)
 cat("Adjacency matrix:\n")
 print(adjacency_matrix)
 
-# Step 8: Plot the DAG using igraph
+# Step 8: Implement the Wald test
+wald_test_results <- matrix(NA, nrow = nrow(B_pruned), ncol = ncol(B_pruned))
+rownames(wald_test_results) <- colnames(data)
+colnames(wald_test_results) <- colnames(data)
+
+for (i in 1:nrow(B_pruned)) {
+  for (j in 1:ncol(B_pruned)) {
+    if (B_pruned[i, j] != 0) {
+      model <- lm(data_centered[, i] ~ data_centered[, j])
+      wald_test <- waldtest(model, . ~ . - data_centered[, j])
+      p_value <- wald_test$'Pr(>F)'[2]
+      wald_test_results[i, j] <- p_value
+    }
+  }
+}
+
+cat("Wald test p-values:\n")
+print(wald_test_results)
+
+# Print significant causal relationships based on the Wald test
+significance_threshold <- 0.05
+significant_edges <- which(wald_test_results < significance_threshold, arr.ind = TRUE)
+
+cat("Significant causal relationships (p < 0.05):\n")
+for (edge in 1:nrow(significant_edges)) {
+  cat(colnames(data)[significant_edges[edge, 1]], "->", colnames(data)[significant_edges[edge, 2]], "\n")
+}
+
+# Step 9: Plot the DAG using igraph with significant edges highlighted
 colnames(adjacency_matrix) <- colnames(data)
 rownames(adjacency_matrix) <- colnames(data)
 graph <- graph_from_adjacency_matrix(adjacency_matrix, mode = "directed", diag = FALSE)
 
-# Open a new graphics device to avoid invalid graphics state
-#dev.off()  # Close any open graphics devices
-dev.new()
-plot(graph, vertex.label = colnames(data), main = "DAG from LiNGAM")
+# Edge colors: Red for significant, Black for non-significant
+edge_colors <- rep("black", ecount(graph))
+for (i in 1:length(edge_colors)) {
+  from <- ends(graph, i)[1]
+  to <- ends(graph, i)[2]
+  if (wald_test_results[which(rownames(wald_test_results) == from), which(colnames(wald_test_results) == to)] < significance_threshold) {
+    edge_colors[i] <- "red"
+  }
+}
 
+# Open a new graphics device to avoid invalid graphics state
+if (dev.cur() > 1) dev.off()
+dev.new()
+plot(graph, vertex.label = colnames(data), edge.color = edge_colors, main = "DAG from LiNGAM with Significant Edges Highlighted")
+
+# Check if the graph is a DAG
 is_dag <- function(adjacency_matrix) {
   graph <- graph_from_adjacency_matrix(adjacency_matrix, mode = "directed", diag = FALSE)
   return(is.dag(graph))
