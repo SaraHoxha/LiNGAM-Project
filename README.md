@@ -1,4 +1,4 @@
-# S4DS - LINGAM Project README
+# S4DS - LiNGAM Project 
 
 ## Authors
 - Sara Hoxha
