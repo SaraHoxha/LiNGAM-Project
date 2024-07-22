@@ -6,7 +6,7 @@ library(GGally)
 library(dplyr)
 
 # Read the dataset
-df <- read.csv("../Dataset/TEH_World_Happiness_2019_Imputed.csv")
+df <- read.csv("Dataset/TEH_World_Happiness_2019_Imputed.csv")
 
 # Check for missing values in each column
 missing_values <- colSums(is.na(df))
@@ -44,13 +44,13 @@ scatter_plot <- ggpairs(df_cleaned,
                         upper = list(continuous = wrap("cor", color = "black")))
 
 # Save the plot to a file
-ggsave("../Figures/Happiness_Scatter_Plot.png", scatter_plot, width = 12, height = 10, units = "in")
+ggsave("Figures/Happiness_Scatter_Plot.png", scatter_plot, width = 12, height = 10, units = "in")
 
 # Normalize the dataframe
 df_normalized <- as.data.frame(scale(df_cleaned))
 
 # Save the normalized dataset to a CSV file
-write.csv(df_normalized, "../Dataset/TEH_World_Happiness_2019_Imputed_Normalized.csv", row.names = FALSE)
+write.csv(df_normalized, "Dataset/TEH_World_Happiness_2019_Imputed_Normalized.csv", row.names = FALSE)
 
 # Compute the correlation matrix
 correlation_matrix <- cor(df_normalized, method = "pearson")

@@ -1,12 +1,12 @@
 # Install and load necessary packages
 library(igraph)
-source("utils.R")
+source("Code/utils.R")
 
 #Set seed for reproducibiilty
 set.seed(123)
 
 # Load the dataset
-happiness_data <- read_dataframe("../Dataset/TEH_World_Happiness_2019_Imputed_Normalized.csv")
+happiness_data <- read_dataframe("Dataset/TEH_World_Happiness_2019_Imputed_Normalized.csv")
 
 #Apply LINGAM
 happiness_result <- lingam_algorithm(happiness_data)
@@ -22,7 +22,7 @@ print("Wald test result Signficant")
 print(happiness_result$wald_test_results)
 
 #Plot causality graph
-plot_causality_graph(happiness_result$adjacency_matrix, "../Figures/CasualGraph.png")
+plot_causality_graph(happiness_result$adjacency_matrix, "Figures/CasualGraph.png")
 
 #Check if graph is a DAG
 print("Is the causal graph a DAG?")
