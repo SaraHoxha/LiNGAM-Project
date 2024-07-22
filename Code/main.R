@@ -18,11 +18,13 @@ print("Causal Order")
 print(happiness_result$causal_order)
 print("Adjacency matrix :")
 print(happiness_result$adjacency_matrix)
-print("Wald test result")
+print("Wald test result Signficant")
 print(happiness_result$wald_test_results)
 
 #Plot causality graph
 plot_causality_graph(happiness_result$adjacency_matrix, "../Figures/CasualGraph.png")
-print("Is the graph a DAG?")
+
+#Check if graph is a DAG
+print("Is the causal graph a DAG?")
 print(is_dag(adjacency_matrix))
 

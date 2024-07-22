@@ -1,4 +1,4 @@
-#Import necessary libraries
+#Load  libraries
 library(fastICA)
 library(combinat)
 library(gtools)
@@ -28,12 +28,7 @@ lingam_algorithm <- function(data) {
   A <- ica_result$A
   S <- ica_result$S
   
-  cat("Mixing Matrix (A):\n")
-  print(A)
-  cat("Source Matrix (S):\n")
-  print(S)
-  
-  # Step 2: Compute W as the inverse of A
+  # Step 1: Compute W as the inverse of A
   W <- solve(A)
   
   # Step 2: Permute rows of W to minimize sum(1/|Wii|)
@@ -60,14 +55,12 @@ lingam_algorithm <- function(data) {
     W_prime[i, ] <- W_prime[i, ] / W_prime[i, i]
   }
   
-  cat("Normalized W_Prime:\n")
-  print(W_prime)
   
   # Step 4: Compute B as I - W_prime
   I <- diag(nrow(W_prime))
   B <- I - W_prime
   
-  #Step 5: Find the permutation matrix P (applied equally to both rows and columns) of B which yields a matrix B = PBPT which is as close as possible to strictly lower triangular. This can be measured for instance using ∑i≤ j B2i j.
+  #Step 5: Find the permutation matrix P (applied equally to both rows and columns) of B which yields a matrix B = PBP^T
   lower_tri_cost <- function(B) {
     sum(B[upper.tri(B)]^2)
   }
@@ -98,14 +91,14 @@ lingam_algorithm <- function(data) {
   return(list(causal_order=causal_order,B=B_permuted, adjacency_matrix =adjacency_matrix, wald_test_results= wald_test_results))
 }
 
-# Function to implement Wald Test to prune edges based on algorithm steps of study paper
+# Function to implement Wald Test to prune edges
 perform_wald_test <- function(data_centered, B) {
   
   wald_test_results <- matrix(NA, nrow = nrow(B), ncol = ncol(B))
   rownames(wald_test_results) <- colnames(data_centered)
   colnames(wald_test_results) <- colnames(data_centered)
   
-  # Define the significance level and critical value for chi-squared test
+  # Define the significance level and critical value
   alpha <- 0.05
   critical_value <- qchisq(1 - alpha, df = 1)
   
@@ -116,16 +109,16 @@ perform_wald_test <- function(data_centered, B) {
         model <- lm(data_centered[, i] ~ data_centered[, j])
         
         # Extract coefficient and standard error
-        coef_estimate <- coef(model)[2]  # coefficient for data_centered[, j]
-        std_error <- summary(model)$coefficients[2, 2]  # standard error of the coefficient
+        coef_estimate <- coef(model)[2]  
+        std_error <- summary(model)$coefficients[2, 2]
         
-        # Compute Wald statistic as the formula from the paper
+        # Compute Wald statistic based on the formula from the paper
         wald_statistic <- (coef_estimate^2) / (std_error^2)
         
         # Calculate p-value from chi-squared distribution
         p_value <- 1 - pchisq(wald_statistic, df = 1)
+      
         
-        # Store p-value in results matrix
         wald_test_results[i, j] <- p_value
       }
     }
@@ -141,20 +134,18 @@ perform_wald_test <- function(data_centered, B) {
 
 # Plot causality graph based on adjacency_matrix
 plot_causality_graph <- function(adjacency_matrix, pathName = NULL) {
-  # Create an igraph object from the adjacency matrix
   g_estimated <- graph_from_adjacency_matrix(adjacency_matrix, mode = "directed", weighted = TRUE, diag = FALSE)
   
   png(filename = pathName, width = 800, height = 600)
-  # Plot the graph
   plot(g_estimated, 
-       vertex.label = V(graph)$name,  # Use vertex names as labels
+       vertex.label = V(graph)$name,  
        vertex.size = 70, 
        vertex.label.cex = 1.2, 
        edge.width = E(g_estimated)$weight * 2, 
        edge.color = "black", 
-       vertex.color = "lightblue",    # Set the color of vertices (nodes)
-       vertex.frame.color = "black",  # Set the color of the border around vertices
-       vertex.label.color = "black",  # Set the color of vertex labels
+       vertex.color = "lightblue",    
+       vertex.frame.color = "black",  
+       vertex.label.color = "black",
        main = "Happiness Causal Graph")
   dev.off()
 }
